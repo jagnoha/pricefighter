@@ -3,6 +3,7 @@ package com.pricecompare;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import org.reactnative.camera.RNCameraPackage;
 import com.github.xinthink.rnmk.ReactMaterialKitPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
@@ -27,8 +28,9 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new ReactMaterialKitPackage(),
-            new VectorIconsPackage(),
+          new RNCameraPackage(),
+          new ReactMaterialKitPackage(),
+          new VectorIconsPackage(),
           new RNFusedLocationPackage(),
           new RNGeocoderPackage()
       );
