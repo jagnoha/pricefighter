@@ -16,6 +16,8 @@ import {
   MKTextField, MKSpinner,
 } from 'react-native-material-kit';
 
+import { RNCamera } from 'react-native-camera';
+import BarcodeMask from 'react-native-barcode-mask';
 
 const Textfield = MKTextField.textfield()
   .withPlaceholder('Text...')
@@ -174,7 +176,15 @@ export default class App extends Component {
           </View>
 
           <Button onPress = {this.findLocation} title="Try again" />
-
+          <View style = {styles.barcode}>
+            <RNCamera
+              onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                console.log(barcodes);
+              }}
+            >
+              <BarcodeMask />
+            </RNCamera>
+          </View>
 
 
       </Container>
@@ -223,5 +233,12 @@ const styles = StyleSheet.create({
     //justifyContent: 'flex-end',
     alignItems: 'center'
   },
+  barcode: {
+    flex: 15,
+    alignItems: 'center',
+    textAlign: 'center',
+    paddingTop: 150,
+  },
+
   
 });
