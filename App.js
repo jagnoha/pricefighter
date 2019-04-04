@@ -7,17 +7,15 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Button, PermissionsAndroid} from 'react-native';
+import {StyleSheet, Text, View, Button, TouchableOpacity, PermissionsAndroid} from 'react-native';
 //import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoder';
 import { Toolbar, Icon } from 'react-native-material-ui';
+import ProductScanRNCamera from './components/ProductScanRNCamera.js'
 
 import {
   MKTextField, MKSpinner,
 } from 'react-native-material-kit';
-
-import { RNCamera } from 'react-native-camera';
-import BarcodeMask from 'react-native-barcode-mask';
 
 const Textfield = MKTextField.textfield()
   .withPlaceholder('Text...')
@@ -54,9 +52,8 @@ export default class App extends Component {
     zipCode: null,
     country: null,
     error: null,
-    processing: true,
-  }
-
+    processing: true,    
+  }  
   
   componentDidMount() {
 
@@ -91,7 +88,6 @@ export default class App extends Component {
         
         
     }
-
 
     findLocation = () => {
       
@@ -130,6 +126,8 @@ export default class App extends Component {
 
     }
 
+        
+
     
 
   render() {
@@ -165,7 +163,8 @@ export default class App extends Component {
     }
 
 
-    return (
+    /*return (
+      <View>
       <Container>
           <MenuPanel title = 'Price Fighter!' />
           
@@ -176,20 +175,18 @@ export default class App extends Component {
           </View>
 
           <Button onPress = {this.findLocation} title="Try again" />
-          <View style = {styles.barcode}>
-            <RNCamera
-              onGoogleVisionBarcodesDetected={({ barcodes }) => {
-                console.log(barcodes);
-              }}
-            >
-              <BarcodeMask />
-            </RNCamera>
-          </View>
 
-
+          
       </Container>
-       
-    );
+     
+
+       </View>
+    );*/
+
+    return (
+      <ProductScanRNCamera />
+    )
+
   }
 }
 
@@ -229,8 +226,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   preview: {
-    //flex: 3,
-    //justifyContent: 'flex-end',
+    flex: 1,
+    justifyContent: 'flex-end',
     alignItems: 'center'
   },
   barcode: {
@@ -238,6 +235,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     textAlign: 'center',
     paddingTop: 150,
+  },
+  capture: {
+    flex: 0,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 15,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
+    margin: 20,
   },
 
   
