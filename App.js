@@ -10,7 +10,8 @@ import React, {Component} from 'react';
 import {StyleSheet, Text, View, Button, TouchableOpacity, PermissionsAndroid} from 'react-native';
 //import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoder';
-import { Toolbar, Icon } from 'react-native-material-ui';
+import { Toolbar } from 'react-native-material-ui';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ProductScanRNCamera from './components/ProductScanRNCamera.js'
 
 import {
@@ -52,7 +53,9 @@ export default class App extends Component {
     zipCode: null,
     country: null,
     error: null,
-    processing: true,    
+    processing: true,
+    scanning: false,
+    productId: null,    
   }  
   
   componentDidMount() {
@@ -87,6 +90,25 @@ export default class App extends Component {
           );
         
         
+    }
+
+    onProductScanned = (productId) => {
+      this.setState({
+        productId,
+        scanning: false,
+      })
+    }
+
+    onScanProduct = () => {
+      this.setState({
+        scanning: true,
+      })
+    }
+
+    onCloseScanner = () => {
+      this.setState({
+        scanning: false,
+      })
     }
 
     findLocation = () => {
@@ -162,30 +184,50 @@ export default class App extends Component {
       )
     }
 
+    if (this.state.scanning){
+      return (
+        <ProductScanRNCamera 
+            onCloseScanner = {this.onCloseScanner} 
+            onProductScanned = {this.onProductScanned}
+        />
+      )
+    }
 
-    /*return (
+
+    return (
       <View>
       <Container>
           <MenuPanel title = 'Price Fighter!' />
           
           <View style = {styles.currentLocation}>
-            <Icon name="place" />
-            <Text>Current Location</Text>
+            <Icon color='#00bfff' name="map-marker" size={50} onPress = {this.findLocation} />            
             <Text>{this.state.fullAddress}</Text>
           </View>
 
-          <Button onPress = {this.findLocation} title="Try again" />
+          <Button onPress = {this.findLocation} title="Get my location" />
 
+          <View style = {styles.barcodeScannerButton}>
+            <Icon onPress = {this.onScanProduct} name='barcode-scan' size={80}/>
+          </View>
+
+          <Button color='#a3c639' onPress = {this.onScanProduct} title="Scan Product" />
+
+          <Text style = {styles.currentLocation}>{this.state.productId}</Text>
+
+         
           
       </Container>
      
 
        </View>
-    );*/
+    );
 
-    return (
+    /*return (
       <ProductScanRNCamera />
-    )
+    )*/
+
+    
+
 
   }
 }
@@ -214,6 +256,13 @@ const styles = StyleSheet.create({
     fontSize: 25,
     textAlign: 'center',
     padding: 10,
+  },
+  barcodeScannerButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: 25,
+    textAlign: 'center',
+    padding: 25,
   },
   spinner: {
     margin: 30,

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Text, View } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import BarcodeMask from 'react-native-barcode-mask';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 class ProductScanRNCamera extends Component {
 
@@ -14,7 +15,8 @@ class ProductScanRNCamera extends Component {
       camera: {
         type: RNCamera.Constants.Type.back,
 	    flashMode: RNCamera.Constants.FlashMode.auto,
-	    barcodeFinderVisible: true
+	    barcodeFinderVisible: true,
+      barcode: null
       }
     };
   }
@@ -38,7 +40,10 @@ class ProductScanRNCamera extends Component {
             mirrorImage={false}
             //onBarCodeRead={this.onBarCodeRead}
             onGoogleVisionBarcodesDetected={ ( { barcodes } ) => {
-                console.warn(barcodes[0]);
+                /*this.setState({
+                  barcode: barcodes[0].rawData,
+                })*/
+                this.props.onProductScanned(barcodes[0].rawData);
             } }
             onFocusChanged={() => {}}
             onZoomChanged={() => {}}
@@ -50,6 +55,9 @@ class ProductScanRNCamera extends Component {
         <BarcodeMask />
         <View style={[styles.overlay, styles.topOverlay]}>
 	  <Text style={styles.scanScreenMessage}>Please scan the barcode.</Text>
+    
+    <Icon style={styles.closeScanner} color="white" name="close-outline" size={100} onPress={this.props.onCloseScanner}/>
+    
 	</View>
 	
     {/*<View style={[styles.overlay, styles.bottomOverlay]}>
@@ -107,6 +115,9 @@ const styles = {
     textAlign: 'center',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  closeScanner: {
+    fontSize: 30,
   }
 };
 
