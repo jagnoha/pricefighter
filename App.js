@@ -7,16 +7,18 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Button, TouchableOpacity, PermissionsAndroid} from 'react-native';
+import {StyleSheet, Text, View, Button, Image, Linking, TouchableOpacity, PermissionsAndroid} from 'react-native';
 //import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoder';
-import { Toolbar } from 'react-native-material-ui';
+import { Toolbar, Card } from 'react-native-material-ui';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ProductScanRNCamera from './components/ProductScanRNCamera.js'
 
 import {
   MKTextField, MKSpinner,
 } from 'react-native-material-kit';
+
+const urlBase = "https://29508158.ngrok.io";
 
 const Textfield = MKTextField.textfield()
   .withPlaceholder('Text...')
@@ -44,6 +46,59 @@ const MenuPanel = (props) => {
   )
 }
 
+const Product = (props) => {
+  return (
+        <View style = {{padding: 5}}>
+        <Card>
+          <View style = {{padding: 10}}>
+           <Image
+             style={{width: 100, height: 100}}
+             source={{uri: props.item.picture}}
+           />
+           <Text>{props.item.title}</Text>
+           <Text>$USD {props.item.price.amount}</Text>
+           <Button title = "Visit" onPress = {()=> { 
+             Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
+               }} />
+          </View>
+        </Card>
+        </View>
+  )
+}
+
+const EbayProducts = (props) => {
+
+  if (props.processing) {
+
+    return (
+      <View style={ { margin: 15, padding: 15 } }>        
+        <MKSpinner style={styles.spinner}/>
+      </View>
+    )
+
+  }
+
+  if (props.ebayProducts.length > 0 && !props.processing) {
+
+    return (
+      <View style={{flexDirection: 'row'}}>
+        <View style={{width: 190}}>  
+          <Product item = {props.ebayProducts[0]} />
+        </View>
+    
+        <View style={{width: 190}}>  
+            <Product item = {props.ebayProducts[1]} />
+        </View>
+      </View>
+
+    )
+
+  } 
+
+  return null
+
+}
+
 export default class App extends Component {
 
   state = {
@@ -55,7 +110,9 @@ export default class App extends Component {
     error: null,
     processing: true,
     scanning: false,
-    productId: null,    
+    productId: null,
+    ebayProducts: [],  
+    processingEbayProducts: false,  
   }  
   
   componentDidMount() {
@@ -92,11 +149,40 @@ export default class App extends Component {
         
     }
 
-    onProductScanned = (productId) => {
+    onProductScanned = (productId) => {      
+
       this.setState({
-        productId,
+        processingEbayProducts: true,
         scanning: false,
+      })      
+      
+      let url = urlBase + '/findebayproducts/' + productId;
+
+      fetch(url, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+          
+      }).then((response) => response.json())
+      .then((responseJson) => 
+      {
+        this.setState({
+          productId,
+          ebayProducts: responseJson,
+          //scanning: false,
+          processingEbayProducts: false,
+        })
+      }).catch(error => {
+        console.warn(error);
+        this.setState({
+          //scanning: false,
+          ebayProducts: [],
+          processingEbayProducts: false,
+        })
       })
+
     }
 
     onScanProduct = () => {
@@ -212,22 +298,16 @@ export default class App extends Component {
 
           <Button color='#a3c639' onPress = {this.onScanProduct} title="Scan Product" />
 
-          <Text style = {styles.currentLocation}>{this.state.productId}</Text>
-
-         
+          {/*<Text style = {styles.currentLocation}>{this.state.productId}</Text>*/}
           
+          <EbayProducts ebayProducts = {this.state.ebayProducts} processing = {this.state.processingEbayProducts} />
+
+
       </Container>
      
 
        </View>
     );
-
-    /*return (
-      <ProductScanRNCamera />
-    )*/
-
-    
-
 
   }
 }
