@@ -7,12 +7,14 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Button, Image, Linking, TouchableOpacity, PermissionsAndroid} from 'react-native';
+import {StyleSheet, Text, View, Button, Image, Linking, 
+  TouchableOpacity, PermissionsAndroid} from 'react-native';
 //import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoder';
-import { Toolbar, Card } from 'react-native-material-ui';
+import { Toolbar, Card, Divider } from 'react-native-material-ui';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import ProductScanRNCamera from './components/ProductScanRNCamera.js'
+import ProductScanRNCamera from './components/ProductScanRNCamera.js';
+import * as Animatable from 'react-native-animatable';
 
 import {
   MKTextField, MKSpinner,
@@ -35,7 +37,7 @@ const Container = (props) => {
 const ProcessingLocationMessage = (props) => {
   return (
     <View style={styles.processingLocation}>
-      <Text>{props.message}</Text>
+      <Text style={{fontSize:20, textAlign: 'center'}}>{props.message}</Text>
     </View>
   )
 }
@@ -108,6 +110,7 @@ export default class App extends Component {
     fullAddress: null,
     zipCode: null,
     country: null,
+    city: null,
     error: null,
     processing: true,
     scanning: false,
@@ -132,6 +135,7 @@ export default class App extends Component {
                   longitude: res[0].position.lng,
                   zipCode: res[0].postalCode,
                   fullAddress: res[0].formattedAddress,
+                  city: res[0].locality,
                   country: res[0].countryCode,
                   //country: 'VE',
                   processing: false,
@@ -148,6 +152,41 @@ export default class App extends Component {
           );
         
         
+    }
+
+
+    findProduct = (productId, zipCode) => {
+      this.setState({
+        processingEbayProducts: true,
+        scanning: false,
+      })      
+      
+      let url = urlBase + '/findebayproducts/' + productId + '/' + zipCode;
+
+      fetch(url, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+          
+      }).then((response) => response.json())
+      .then((responseJson) => 
+      {
+        this.setState({
+          productId,
+          ebayProducts: responseJson.filter(item => item.condition !== "For parts or not working"),
+          //scanning: false,
+          processingEbayProducts: false,
+        })
+      }).catch(error => {
+        console.warn(error);
+        this.setState({
+          //scanning: false,
+          ebayProducts: [],
+          processingEbayProducts: false,
+        })
+      })
     }
 
     onProductScanned = (productId) => {      
@@ -213,18 +252,26 @@ export default class App extends Component {
           }
   
           Geocoder.geocodePosition(coordenates).then(res => {
+            //console.warn(res[0]);
+
             this.setState({
               latitude: res[0].position.lat,
               longitude: res[0].position.lng,
               zipCode: res[0].postalCode,
               fullAddress: res[0].formattedAddress,
+              city: res[0].locality,
               country: res[0].countryCode,
               processing: false,
-              productId: null,
+              //productId: null,
               ebayProducts: [],  
               processingEbayProducts: false,
               //country: 'VE',
             });
+
+            if (this.state.productId){
+              this.findProduct(this.state.productId, res[0].postalCode);
+            }
+
           }).catch(error => {
             this.setState({
               error: error,
@@ -248,7 +295,7 @@ export default class App extends Component {
       return (
         <Container>
           <MenuPanel title = 'Price Fighter!' /> 
-          <ProcessingLocationMessage message = "Checking your Location..." />
+          <ProcessingLocationMessage message = "Updating your new location..." />
           <MKSpinner style={styles.spinner}/>
         </Container>
       )
@@ -288,19 +335,42 @@ export default class App extends Component {
       <View>
       <Container>
           <MenuPanel title = 'Price Fighter!' />
+
+          
           
           <View style = {styles.currentLocation}>
-            <Icon color='#00bfff' name="map-marker" size={50} onPress = {this.findLocation} />            
-            <Text>{this.state.fullAddress}</Text>
-          </View>
+            <Icon color='#00bfff' name="map-marker" size={30} onPress = {this.findLocation} />            
+            <Text style = {{fontSize: 25}}>I am in {this.state.city}</Text>
+           </View>
 
-          <Button onPress = {this.findLocation} title="Get my location" />
+          <Divider />
+          
 
-          <View style = {styles.barcodeScannerButton}>
-            <Icon onPress = {this.onScanProduct} name='barcode-scan' size={80}/>
-          </View>
+          {/*<Button onPress = {this.findLocation} title="Get my location" />*/}
 
-          <Button color='#a3c639' onPress = {this.onScanProduct} title="Scan Product" />
+    
+
+          <View style={{flexDirection: 'row'}}>
+          
+        <View style={{alignItems: 'center', width: 100}}>  
+            <Icon name="crosshairs-gps" size={35} onPress = {this.findLocation} />           
+            
+        </View>
+
+        <Animatable.View animation="rubberBand" iterationCount={5} direction="alternate">
+            <View style={{alignItems: 'center', width: 100}}>  
+                <Icon onPress = {this.onScanProduct} name='barcode-scan' size={35}/>
+            </View>
+        </Animatable.View>
+
+
+        
+      </View>
+
+
+          
+
+          {/*<Button color='#a3c639' onPress = {this.onScanProduct} title="Scan Product" />*/}
 
           {/*<Text style = {styles.currentLocation}>{this.state.productId}</Text>*/}
           
@@ -330,7 +400,8 @@ const styles = StyleSheet.create({
   },
   processingLocation: {
     flex: 2,
-    fontSize: 20,
+    fontSize: 25,
+    alignItems: 'center',
     textAlign: 'center',
     padding: 30,
   },
