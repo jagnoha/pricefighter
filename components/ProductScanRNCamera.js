@@ -52,7 +52,7 @@ class ProductScanRNCamera extends Component {
             style={styles.preview}
             type={this.state.camera.type}
         />
-        <BarcodeMask />
+        <BarcodeMask width={300} height={100} />
         <View style={[styles.overlay, styles.topOverlay]}>
 	  <Text style={styles.scanScreenMessage}>Please scan the barcode.</Text>
     

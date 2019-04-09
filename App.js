@@ -52,10 +52,11 @@ const Product = (props) => {
         <Card>
           <View style = {{padding: 10}}>
            <Image
-             style={{width: 100, height: 100}}
+             style={{width: 143, height: 143}}
              source={{uri: props.item.picture}}
            />
-           <Text>{props.item.title}</Text>
+           <Text>{props.item.title.slice(0,60) + '...'}</Text>
+           <Text>{props.item.condition}</Text>
            <Text>$USD {props.item.price.amount}</Text>
            <Button title = "Visit" onPress = {()=> { 
              Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
@@ -87,7 +88,7 @@ const EbayProducts = (props) => {
         </View>
     
         <View style={{width: 190}}>  
-            <Product item = {props.ebayProducts[1]} />
+            <Product item = {props.ebayProducts[0]} />
         </View>
       </View>
 
@@ -156,7 +157,7 @@ export default class App extends Component {
         scanning: false,
       })      
       
-      let url = urlBase + '/findebayproducts/' + productId;
+      let url = urlBase + '/findebayproducts/' + productId + '/' + this.state.zipCode;
 
       fetch(url, {
           headers: {
@@ -170,7 +171,7 @@ export default class App extends Component {
       {
         this.setState({
           productId,
-          ebayProducts: responseJson,
+          ebayProducts: responseJson.filter(item => item.condition !== "For parts or not working"),
           //scanning: false,
           processingEbayProducts: false,
         })
@@ -219,6 +220,9 @@ export default class App extends Component {
               fullAddress: res[0].formattedAddress,
               country: res[0].countryCode,
               processing: false,
+              productId: null,
+              ebayProducts: [],  
+              processingEbayProducts: false,
               //country: 'VE',
             });
           }).catch(error => {
