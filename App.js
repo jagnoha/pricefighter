@@ -7,7 +7,7 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Button, Image, Linking, 
+import {StyleSheet, Text, View, Button, Image, Linking, TextInput, 
   TouchableOpacity, PermissionsAndroid} from 'react-native';
 //import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoder';
@@ -17,6 +17,12 @@ import ProductScanRNCamera from './components/ProductScanRNCamera.js';
 import * as Animatable from 'react-native-animatable';
 import ebayLogo from './ebaybrands.svg';
 import SvgUri from 'react-native-svg-uri';
+//import { SearchBar } from 'react-native-elements';
+//import SearchBar from 'react-native-material-design-searchbar';
+import { showMessage, hideMessage } from "react-native-flash-message";
+import FlashMessage from "react-native-flash-message";
+
+
 
 import {
   MKTextField, MKSpinner,
@@ -38,7 +44,7 @@ const Container = (props) => {
 
 const Winner = () => {
   return (     
-    <Animatable.View style={{textAlign: 'center', alignItems: 'center', width: 60}} animation="bounce" iterationCount={5} direction="normal">
+    <Animatable.View style={{textAlign: 'center', alignItems: 'center', width: 60}} animation="bounce" iterationCount={2} direction="normal">
             <View style={{alignItems: 'center', width: 60}}>  
                 <Icon name='hand-pointing-up' color="#4da6ff" size={60}/>
             </View>
@@ -64,7 +70,9 @@ const EbayProduct = (props) => {
   return (
         <View style = {{padding: 5}}>
         
-        <Card>
+        <Card onPress = {()=> { 
+             Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
+               }}>
           <View style = {{padding: 10}}>
           <SvgUri style = {{padding: 5, alignItems: 'center', textAlign: 'center'}} width="45" height="45" fill="black" source={require('./ebaybrands.svg')} />
            <Image
@@ -74,9 +82,9 @@ const EbayProduct = (props) => {
            <Text>{props.item.title.slice(0,60) + '...'}</Text>
            <Text style = {{fontWeight: "bold"}}>{props.item.condition}</Text>
            <Text style = {{fontSize: 19}}>$USD {props.item.price.amount}</Text>
-           <Button title = "Visit" onPress = {()=> { 
+           {/*<Button title = "Visit" onPress = {()=> { 
              Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
-               }} />
+               }} />*/}
           </View>
         </Card>
         
@@ -87,7 +95,9 @@ const EbayProduct = (props) => {
 const AmazonProduct = (props) => {
   return (
         <View style = {{padding: 5}}>
-        <Card>
+        <Card onPress = {()=> { 
+             Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
+               }}>
           <View style = {{padding: 10}}>
             <Icon style = {{padding: 5, alignItems: 'center', textAlign: 'center'}} name="amazon" size={44} />  
            <Image
@@ -97,9 +107,9 @@ const AmazonProduct = (props) => {
            <Text>{props.item.title.slice(0,60) + '...'}</Text>
            <Text style = {{fontWeight: "bold"}}>{props.item.condition}</Text>
            <Text style = {{fontSize: 19}}>$USD {props.item.price}</Text>
-           <Button title = "Visit" onPress = {()=> { 
+           {/*<Button title = "Visit" onPress = {()=> { 
              Linking.openURL(props.item.linkUrl).catch((err) => console.error('An error occurred', err));
-               }} />
+               }} />*/}
           </View>
         </Card>
         </View>
@@ -183,7 +193,8 @@ export default class App extends Component {
     ebayProducts: [],
     amazonProducts: null,  
     processingEbayProducts: false,  
-    processingAmazonProducts: false,  
+    processingAmazonProducts: false,
+    toggleSearch: false,  
   }  
   
   componentDidMount() {
@@ -221,6 +232,13 @@ export default class App extends Component {
         
     }
 
+    onSelectSearch = () => {
+      this.setState({
+        toggleSearch: !this.state.toggleSearch,
+        productId: null,
+      })
+    }
+
     findEbayProducts = (productId, zipCode) => {
       
       this.setState({
@@ -228,7 +246,7 @@ export default class App extends Component {
         scanning: false,
       })      
       
-      let url = urlBase + '/findebayproducts/' + productId + '/' + zipCode;
+      let url = urlBase + '/findebayproducts/' + productId.replace(/ /g,'+') + '/' + zipCode;
 
       fetch(url, {
           headers: {
@@ -239,21 +257,57 @@ export default class App extends Component {
           
       }).then((response) => response.json())
       .then((responseJson) => 
-      {
+      { 
         this.setState({
           productId,
-          ebayProducts: responseJson.filter(item => item.condition !== "For parts or not working"),
-          //scanning: false,
+          ebayProducts: responseJson.filter(item => item.condition === "New").length > 0 ?
+          responseJson.filter(item => item.condition === "New") : 
+          responseJson.filter(item => item.condition !== "For parts or not working"),
           processingEbayProducts: false,
         })
+
+        if (!this.state.amazonProducts && 
+          responseJson.filter(item => item.condition !== "For parts or not working").length === 0){
+            
+            this.setState({
+              toggleSearch: true,
+              productId: null,
+
+            })
+
+            showMessage({
+              message: "Product not found",
+              description: "Try again using another keywords",
+              type: "warning",
+              duration: 2500,
+            });
+          }
+
+
+
+
       }).catch(error => {
-        console.warn(error);
+        //console.warn(error);
         this.setState({
           //scanning: false,
           ebayProducts: [],
           processingEbayProducts: false,
         })
       })
+    }
+
+    onSearchProduct = () => {
+
+      this.setState({
+        toggleSearch: false,
+        ebayProducts: [],
+        amazonProducts: null,
+
+      })
+
+      if (this.state.productId && this.state.productId.length > 0){
+        this.findAmazonProducts(this.state.productId, this.state.zipCode);
+      }
     }
 
     findAmazonProducts = (productId, zipCode) => {
@@ -263,7 +317,11 @@ export default class App extends Component {
         scanning: false,
       })      
       
-      let url = urlBase + '/amazonsearch/' + productId;
+      //console.warn(productId.replace(/ /g,'+'));
+
+      let url = urlBase + '/amazonsearch/' + productId.replace(/ /g,'+');
+
+      
 
       fetch(url, {
           headers: {
@@ -275,6 +333,7 @@ export default class App extends Component {
       }).then((response) => response.json())
       .then((responseJson) => 
       {
+        //console.warn(responseJson);
         this.setState({
           productId,
           amazonProducts: responseJson,
@@ -284,7 +343,8 @@ export default class App extends Component {
         //console.warn(responseJson);
         if (responseJson) {
 
-          this.findEbayProducts(productId + ' ' + responseJson.title.split(' ')[0] + ' ' + responseJson.title.split(' ')[1], zipCode);
+          //this.findEbayProducts(productId + ' ' + responseJson.title.split(' ')[0] + ' ' + responseJson.title.split(' ')[1], zipCode);
+          this.findEbayProducts(productId, zipCode);
 
         } else {
           this.findEbayProducts(productId, zipCode);
@@ -307,6 +367,11 @@ export default class App extends Component {
       //this.findEbayProducts(productId, zipCode);
    
     }
+
+    updateSearch = search => {
+      this.setState({ productId: search });
+    };
+  
 
     /*findProduct = (productId, zipCode) => {
       
@@ -343,6 +408,7 @@ export default class App extends Component {
         productId: null,
         ebayProducts: [],
         amazonProducts: null,
+        toggleSearch: false,
       })
     }
 
@@ -355,7 +421,8 @@ export default class App extends Component {
     findLocation = () => {
       
       this.setState({
-        processing: true
+        processing: true,
+        toggleSearch: false,
       })
 
       navigator.geolocation.getCurrentPosition(
@@ -475,19 +542,39 @@ export default class App extends Component {
             
         </View>
 
-        <Animatable.View animation="rubberBand" iterationCount={5} direction="alternate">
+        <Animatable.View animation="rubberBand" iterationCount={3} direction="alternate">
             <View style={{alignItems: 'center', width: 100}}>  
                 <Icon onPress = {this.onScanProduct} name='barcode-scan' size={35}/>
             </View>
         </Animatable.View>
 
+        <View style={{alignItems: 'center', width: 100}}>  
+            <Icon name="magnify" size={35} onPress = {this.onSelectSearch} />           
+            
+        </View>
+
+        
+
 
         
       </View>
 
+      { this.state.toggleSearch &&
+      <View style={{marginTop: 100}}>
+      <Animatable.View animation="tada" iterationCount={1} direction="alternate">
+            <TextInput
+              style={{borderRadius: 25, height: 60, borderColor: 'gray', borderWidth: 1}}
+              onChangeText={this.updateSearch}
+              onEndEditing={this.onSearchProduct}
+              value={!this.state.productId ? "" : this.state.productId}
+              placeholder="     Search by any keyword ...     "
+            />
+      </Animatable.View>
+      </View>
+      }
          
-          
-          <View style={{flexDirection: 'row'}}>
+          { !this.state.toggleSearch &&
+          <View style={{flexDirection: 'row', marginTop: 10}}>
             <EbayProducts 
                 winner = { this.state.ebayProducts.length > 0 && this.state.amazonProducts 
                   && Number(this.state.ebayProducts[0].price.amount) < Number(this.state.amazonProducts.price) ? true : false } 
@@ -497,12 +584,12 @@ export default class App extends Component {
                 && Number(this.state.ebayProducts[0].price.amount) > Number(this.state.amazonProducts.price) ? true : false } 
               amazonProducts = {this.state.amazonProducts} processing = {this.state.processingAmazonProducts} />
           </View>        
-        
+          }
 
 
       </Container>
      
-
+      <FlashMessage position="top" />
        </View>
     );
 
