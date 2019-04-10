@@ -300,8 +300,8 @@ export default class App extends Component {
             })
 
             showMessage({
-              message: "Product not found",
-              description: "Try again using other keywords",
+              message: "No exact matches found",
+              description: "Try checking your spelling or use more general terms",
               type: "warning",
               icon: "auto",
               duration: 3000,
@@ -593,7 +593,7 @@ export default class App extends Component {
               onChangeText={this.updateSearch}
               onEndEditing={this.onSearchProduct}
               value={!this.state.productId ? "" : this.state.productId}
-              placeholder= "                Search Product ...                "  
+              placeholder= "           Enter keyword or product number ...           "  
             />
       </Animatable.View>
       </View>
