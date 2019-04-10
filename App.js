@@ -75,12 +75,17 @@ const MenuPanel = (props) => {
   )
 }
 
+
 const Greetings = (props) => {
   return (
-    <View style={{padding: 30, marginTop: 50}}>
-      <Text style = {{fontSize: 30}}>Price Fighter!</Text>
-      <Text style = {{fontSize: 20}}>Compare the best price between these two giants of e-commerce</Text>
+    <Animatable.View animation="rubberBand" iterationCount={1} direction="alternate">
+    <View style={{padding: 30, marginTop: 30}}>
+      <Image
+             style={{width: 350, height: 200}}
+             source={require('./ebayamazon.png')}
+      />
     </View>
+    </Animatable.View>
   )
 }
 
