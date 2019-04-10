@@ -46,7 +46,7 @@ const Winner = () => {
   return (     
     <Animatable.View style={{textAlign: 'center', alignItems: 'center', width: 60}} animation="bounce" iterationCount={2} direction="normal">
             <View style={{alignItems: 'center', width: 60}}>  
-                <Icon name='hand-pointing-up' color="#4da6ff" size={60}/>
+                <Icon name='hand-pointing-up' color="#77b300" size={60}/>
             </View>
     </Animatable.View>
   )
@@ -62,7 +62,25 @@ const ProcessingLocationMessage = (props) => {
 
 const MenuPanel = (props) => {
   return (
-  <Toolbar centerElement = {props.title} />
+  <Toolbar 
+    centerElement = {props.title} 
+    style={{container: { backgroundColor: '#77b300'}}}
+    rightElement={{
+      menu: {
+          icon: "more-vert",
+          labels: ["Help"]
+      }
+    }}
+  />
+  )
+}
+
+const Greetings = (props) => {
+  return (
+    <View style={{padding: 30, marginTop: 50}}>
+      <Text style = {{fontSize: 30}}>Price Fighter!</Text>
+      <Text style = {{fontSize: 20}}>Compare the best price between these two giants of e-commerce</Text>
+    </View>
   )
 }
 
@@ -246,7 +264,8 @@ export default class App extends Component {
         scanning: false,
       })      
       
-      let url = urlBase + '/findebayproducts/' + productId.replace(/ /g,'+') + '/' + zipCode;
+      //let url = urlBase + '/findebayproducts/' + productId.replace(/ /g,'+') + '/' + zipCode;
+      let url = urlBase + '/findebayproducts/' + productId + '/' + zipCode;
 
       fetch(url, {
           headers: {
@@ -277,9 +296,10 @@ export default class App extends Component {
 
             showMessage({
               message: "Product not found",
-              description: "Try again using another keywords",
+              description: "Try again using other keywords",
               type: "warning",
-              duration: 2500,
+              icon: "auto",
+              duration: 3000,
             });
           }
 
@@ -475,6 +495,7 @@ export default class App extends Component {
     
 
   render() {
+
     
     if (this.state.processing === true){
       return (
@@ -486,7 +507,7 @@ export default class App extends Component {
       )
     }
 
-    if (this.state.country !== 'US' && !this.state.error){
+    /*if (this.state.country !== 'US' && !this.state.error){
       return (
         <Container>
           <MenuPanel title = 'Price Fighter!' /> 
@@ -494,7 +515,7 @@ export default class App extends Component {
           <Button onPress = {this.findLocation} title="Try again" />
         </Container>
       )
-    }
+    }*/
     
     if (this.state.error){
       return (
@@ -515,7 +536,7 @@ export default class App extends Component {
       )
     }
 
-
+    
     return (
       <View>
       <Container>
@@ -525,7 +546,7 @@ export default class App extends Component {
           
           <View style = {styles.currentLocation}>
             <Icon color='#00bfff' name="map-marker" size={30} onPress = {this.findLocation} />            
-            <Text style = {{fontSize: 25}}>I'm in {this.state.city}</Text>
+            <Text style = {{fontSize: 22}}>I'm in {this.state.city}</Text>
            </View>
 
           <Divider />
@@ -563,11 +584,11 @@ export default class App extends Component {
       <View style={{marginTop: 100}}>
       <Animatable.View animation="tada" iterationCount={1} direction="alternate">
             <TextInput
-              style={{borderRadius: 25, height: 60, borderColor: 'gray', borderWidth: 1}}
+              style={{borderRadius: 25, height: 50, backgroundColor: '#e6e6e6' /*borderColor: 'gray', borderWidth: 1*/}}
               onChangeText={this.updateSearch}
               onEndEditing={this.onSearchProduct}
               value={!this.state.productId ? "" : this.state.productId}
-              placeholder="     Search by any keyword ...     "
+              placeholder= "                Search Product ...                "  
             />
       </Animatable.View>
       </View>
@@ -586,10 +607,16 @@ export default class App extends Component {
           </View>        
           }
 
+          { !this.state.amazonProducts && this.state.ebayProducts.length === 0 
+          && !this.state.toggleSearch && !this.state.processingEbayProducts && !this.state.processingAmazonProducts &&
+            <Greetings />
+          }
 
+        
       </Container>
+      <FlashMessage position="top" />  
      
-      <FlashMessage position="top" />
+      
        </View>
     );
 
